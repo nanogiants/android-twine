@@ -8,7 +8,7 @@ class TwinePlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
 
-        def generateStrings = project.tasks.create("generateStrings") {
+        def generateStrings = project.tasks.create("twine: generateStrings") {
             doLast {
                 runTwineScript()
             }
@@ -16,7 +16,7 @@ class TwinePlugin implements Plugin<Project> {
         generateStrings.group = "appcom"
         generateStrings.description = "Generates string values from twine.txt file."
 
-        def printTwineInfo = project.tasks.create("printTwineInfo") {
+        def printTwineInfo = project.tasks.create("twine: printVersion") {
             doLast {
                 println "Twine Version: " + getTwineVersion()
             }
