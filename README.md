@@ -30,10 +30,10 @@ apply plugin: 'eu.appcom.gradle.android-twine'
 
 ## Usage
 
-Place your [twine-conforming](https://github.com/scelis/twine#twine-file-format) **localisation.txt** file in a subfolder of the project root directory named 'twine'.
+Place your [twine-conforming](https://github.com/scelis/twine#twine-file-format) **localisation.txt** file in a subfolder of the project root directory named 'localisation'.
 
 ```
-$project_root/twine/localisation.txt
+$project_root/localisation/localisation.txt
 ```
 
 Open a terminal at your project root folder (we recommend using the android studio terminal) and run the task 'generateStrings'

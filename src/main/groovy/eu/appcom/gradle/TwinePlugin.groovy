@@ -14,7 +14,7 @@ class TwinePlugin implements Plugin<Project> {
             }
         }
         generateStrings.group = "appcom"
-        generateStrings.description = "Generates string values from twine.txt file."
+        generateStrings.description = "Generates string values from localisation.txt file."
 
         def printTwineInfo = project.tasks.create("printTwineVersion") {
             doLast {
@@ -42,11 +42,11 @@ class TwinePlugin implements Plugin<Project> {
         if (getTwineVersion() >= 10.0) {
             println "Use twine version newer than 0.9 to generate Strings"
             script =
-                    "if hash twine 2>/dev/null; then twine generate-all-localization-files ../twine/localisation.txt ../app/src/main/res; fi"
+                    "if hash twine 2>/dev/null; then twine generate-all-localization-files ../localisation/localisation.txt ../app/src/main/res; fi"
         } else {
             println "Use twine version older than 0.10 to generate Strings"
             script =
-                    "if hash twine 2>/dev/null; then twine generate-all-string-files ../twine/localisation.txt ../app/src/main/res; fi"
+                    "if hash twine 2>/dev/null; then twine generate-all-string-files ../localisation/localisation.txt ../app/src/main/res; fi"
         }
         exec {
             executable "sh"
