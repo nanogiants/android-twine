@@ -26,7 +26,7 @@ class TwinePlugin implements Plugin<Project> {
     }
 
     static def getTwineVersion() {
-        def script = ["bash", "-c", "twine --version"].execute()
+        def script = ["bash", "-c", "gem list"].execute()
         String version = ""
         script.text.eachLine { line ->
             if (line.contains("twine ")) {
