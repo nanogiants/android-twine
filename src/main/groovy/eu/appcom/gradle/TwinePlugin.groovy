@@ -50,10 +50,7 @@ class TwinePlugin implements Plugin<Project> {
             script =
                     "if hash twine 2>/dev/null; then twine generate-all-string-files ../localisation/localisation.txt ../app/src/main/res; fi"
         }
-        exec {
-            executable "sh"
-            args '-c', script
-        }
+        ["sh", "-c", script].execute()
     }
 
   static boolean greaterOrSame(String verA, String verB) {
