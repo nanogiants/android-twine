@@ -17,7 +17,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'eu.appcom.gradle:android-twine:0.1.1'
+    classpath 'eu.appcom.gradle:android-twine:0.2.0'
   }
 }
 ```
