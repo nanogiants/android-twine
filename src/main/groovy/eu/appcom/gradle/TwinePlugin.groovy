@@ -3,7 +3,7 @@ package eu.appcom.gradle
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-class TwinePlugin implements Plugin<Project> {
+class TwinePlugin implements Plugin < Project > {
 
     @Override
     void apply(Project project) {
@@ -26,33 +26,50 @@ class TwinePlugin implements Plugin<Project> {
     }
 
     static def getTwineVersion() {
-        def script = ["bash", "-c", "twine --version"].execute()
-        String version = script.text
-        Float v
-        if (!version.isEmpty()) {
-            v = new Float(version.replace("Twine version 0.", ""))
-        } else {
+        def script = ["bash", "-c", "gem list"].execute()
+        String version = ""
+        script.text.eachLine {
+            line ->
+                if (line.contains("twine ")) {
+                    version = line.substring(line.indexOf("(") + 1, line.indexOf(")"))
+                }
+        }
+        if (version.isEmpty()) {
             throw new AssertionError("Twine not found!")
         }
-        return v
+        return version
     }
 
     static def runTwineScript() {
         String script
-        if (getTwineVersion() >= 10.0) {
-            println "Use twine version newer than 0.9 to generate Strings"
-            script =
+        if (greaterOrSame(getTwineVersion(), "0.10.0")) {
+            if (greaterOrSame(getTwineVersion(), "1.0.0")) {
+                println "Use twine version newer than 1.0.0 to generate Strings"
+                script =
+                    "if hash twine 2>/dev/null; then twine generate-all-localization-files ../localisation/localisation.txt ../app/src/main/res --format android; fi"
+            } else {
+                println "Use twine version newer than 0.10.0 to generate Strings"
+                script =
                     "if hash twine 2>/dev/null; then twine generate-all-localization-files ../localisation/localisation.txt ../app/src/main/res; fi"
+            }
         } else {
-            println "Use twine version older than 0.10 to generate Strings"
+            println "Use twine version older than 0.10.0 to generate Strings"
             script =
-                    "if hash twine 2>/dev/null; then twine generate-all-string-files ../localisation/localisation.txt ../app/src/main/res; fi"
+                "if hash twine 2>/dev/null; then twine generate-all-string-files ../localisation/localisation.txt ../app/src/main/res; fi"
         }
-        exec {
-            executable "sh"
-            args '-c', script
+        ["sh", "-c", script].execute()
+    }
+
+    static boolean greaterOrSame(String verA, String verB) {
+        String[] verTokenA = verA.tokenize(".")
+        String[] verTokenB = verB.tokenize('.')
+        int commonIndices = Math.min(verTokenA.size(), verTokenB.size())
+
+        for (int i = 0; i < commonIndices; ++i) {
+            if (verTokenA[i].toInteger() > verTokenB[i].toInteger()) {
+                return true
+            }
         }
+        return verTokenA.size() >= verTokenB.size()
     }
 }
-
-
