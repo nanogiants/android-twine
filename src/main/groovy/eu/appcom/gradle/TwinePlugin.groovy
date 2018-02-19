@@ -5,8 +5,14 @@ import org.gradle.api.Project
 
 class TwinePlugin implements Plugin < Project > {
 
+    static String sourcePath = ""
+    static String outputPath = ""
+
     @Override
     void apply(Project project) {
+
+        sourcePath = project.getRootDir().path + "/localisation/localisation.txt"
+        outputPath = project.getRootDir().path + "/app/src/main/res"
 
         def generateStrings = project.tasks.create("generateStrings") {
             doLast {
@@ -46,16 +52,16 @@ class TwinePlugin implements Plugin < Project > {
             if (greaterOrSame(getTwineVersion(), "1.0.0")) {
                 println "Use twine version newer than 1.0.0 to generate Strings"
                 script =
-                    "if hash twine 2>/dev/null; then twine generate-all-localization-files ../localisation/localisation.txt ../app/src/main/res --format android; fi"
+                    "if hash twine 2>/dev/null; then twine generate-all-localization-files" + sourcePath + " " + outputPath + "; fi"
             } else {
                 println "Use twine version newer than 0.10.0 to generate Strings"
                 script =
-                    "if hash twine 2>/dev/null; then twine generate-all-localization-files ../localisation/localisation.txt ../app/src/main/res; fi"
+                    "if hash twine 2>/dev/null; then twine generate-all-localization-files" + sourcePath + " " + outputPath + "; fi"
             }
         } else {
             println "Use twine version older than 0.10.0 to generate Strings"
             script =
-                "if hash twine 2>/dev/null; then twine generate-all-string-files ../localisation/localisation.txt ../app/src/main/res; fi"
+                "if hash twine 2>/dev/null; then twine generate-all-string-files" + sourcePath + " " + outputPath + "; fi"
         }
         ["sh", "-c", script].execute()
     }
