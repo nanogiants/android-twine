@@ -2,73 +2,100 @@ package eu.appcom.gradle
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 
-class TwinePlugin implements Plugin < Project > {
+class TwinePlugin implements Plugin<Project> {
 
-    static String sourcePath = ""
-    static String outputPath = ""
+    final static String VERSION_0_10 = "0.10.0"
 
-    @Override
+    static String twineVersion
+    static String sourcePath
+    static String outputPath
+    static boolean validate
+
     void apply(Project project) {
+        project.extensions.add("twineplugin", TwinePluginExtension)
 
-        sourcePath = project.getRootDir().path + "/localisation/localisation.txt"
-        outputPath = project.getRootDir().path + "/app/src/main/res"
-
-        def generateStrings = project.tasks.create("generateStrings") {
+        Task generateStrings = project.tasks.create("generateStrings") {
             doLast {
+                setTwineVersion()
+                setVariables(project)
                 runTwineScript()
             }
         }
         generateStrings.group = "appcom"
-        generateStrings.description = "Generates string values from localisation.txt file."
+        generateStrings.description = "Generates string values from localisation file."
 
-        def printTwineInfo = project.tasks.create("printTwineVersion") {
+        Task printTwineVersion = project.tasks.create("printTwineVersion") {
             doLast {
-                println "Twine Version: " + getTwineVersion()
+                setTwineVersion()
             }
         }
-        printTwineInfo.group = "appcom"
-        printTwineInfo.description = "Prints twine information."
+        printTwineVersion.group = "appcom"
+        printTwineVersion.description = "Prints installed twine version."
     }
 
-    static def getTwineVersion() {
-        def script = ["bash", "-c", "gem list"].execute()
-        String version = ""
-        script.text.eachLine {
+    static void setTwineVersion() {
+        twineVersion = null
+        ["bash", "-c", "gem list"].execute().text.eachLine {
             line ->
-                if (line.contains("twine ")) {
-                    version = line.substring(line.indexOf("(") + 1, line.indexOf(")"))
+                if (line.toLowerCase().startsWith("twine (")) {
+                    twineVersion = line.substring(line.indexOf("(") + 1, line.indexOf(")"))
                 }
         }
-        if (version.isEmpty()) {
+        if (twineVersion == null) {
             throw new AssertionError("Twine not found!")
-        }
-        return version
-    }
-
-    static def runTwineScript() {
-        String script
-        if (greaterOrSame(getTwineVersion(), "0.10.0")) {
-            if (greaterOrSame(getTwineVersion(), "1.0.0")) {
-                println "Use twine version newer than 1.0.0 to generate Strings"
-                script =
-                    "if hash twine 2>/dev/null; then twine generate-all-localization-files" + sourcePath + " " + outputPath + "; fi"
-            } else {
-                println "Use twine version newer than 0.10.0 to generate Strings"
-                script =
-                    "if hash twine 2>/dev/null; then twine generate-all-localization-files" + sourcePath + " " + outputPath + "; fi"
-            }
         } else {
-            println "Use twine version older than 0.10.0 to generate Strings"
-            script =
-                "if hash twine 2>/dev/null; then twine generate-all-string-files" + sourcePath + " " + outputPath + "; fi"
+            println 'twine version "' + twineVersion + '"'
         }
-        ["sh", "-c", script].execute()
     }
 
-    static boolean greaterOrSame(String verA, String verB) {
+    static void setVariables(Project project) {
+        if (project.extensions.twineplugin.inputFilePath != null) {
+            sourcePath =
+                project.rootDir.getAbsolutePath() + (project.extensions.twineplugin.inputFilePath.startsWith("/") ? "" :
+                    "/") + project.extensions.twineplugin.inputFilePath
+        } else {
+            sourcePath = project.rootDir.getAbsolutePath() + "/localisation/localisation.txt"
+        }
+        if (project.extensions.twineplugin.outputResPath != null) {
+            outputPath =
+                project.rootDir.getAbsolutePath() + (project.extensions.twineplugin.outputResPath.startsWith("/") ? "" :
+                    "/") + project.extensions.twineplugin.outputResPath
+        } else {
+            outputPath = project.rootDir.getAbsolutePath() + "/app/src/main/res"
+        }
+        if (project.extensions.twineplugin.validate != null) {
+            validate = project.extensions.twineplugin.validate
+        } else {
+            validate = true
+        }
+    }
+
+    static void runTwineScript() {
+        String script
+        String command
+        if (isAtLeast(twineVersion, VERSION_0_10)) {
+            command = "generate-all-localization-files"
+        } else {
+            command = "generate-all-string-files"
+        }
+        script = command + " " + sourcePath + " " + outputPath + (validate ? " --validate" : "") + " --format android"
+        println script
+        script = "if hash twine 2>/dev/null; then twine " + script + "; fi"
+
+        Process process = ["sh", "-c", script].execute()
+        process.waitFor()
+        String error = process.errorStream.text
+
+        if (process.exitValue() != 0 || !error.isEmpty()) {
+            throw new AssertionError(error)
+        }
+    }
+
+    static boolean isAtLeast(String verA, String verB) {
         String[] verTokenA = verA.tokenize(".")
-        String[] verTokenB = verB.tokenize('.')
+        String[] verTokenB = verB.tokenize(".")
         int commonIndices = Math.min(verTokenA.size(), verTokenB.size())
 
         for (int i = 0; i < commonIndices; ++i) {
