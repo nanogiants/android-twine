@@ -16,6 +16,7 @@ def projectVersion = gitTag()
 def projectURL = "https://github.com/appcom-interactive/android-twine"
 def projectGit = "https://github.com/appcom-interactive/android-twine.git"
 
+group projectGroup
 version projectVersion
 
 install {
