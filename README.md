@@ -51,7 +51,7 @@ Print the currently installed twine version
 
 ## Configuration
 
-You can optionally customize the default configuration inside your project level `build.gradle`
+You can optionally customize the default configuration inside your module level `build.gradle`
 ```
 twineplugin {
   inputFilePath = "localisation_file_path" // default "/localisation/localisation.txt"
